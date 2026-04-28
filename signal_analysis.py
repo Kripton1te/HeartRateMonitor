@@ -1,29 +1,34 @@
 # oet24 amc272
 # Oximeter Program
+#%%
+from numpy import fft
+import numpy as np
+import matplotlib.pyplot as plt
 
 class Signal:
     def __init__(self):
         self.signal = []
-        self.AddSignal()
+        self.AddSignal()      
         self.readings = len(self.signal)
         self.duration = self.signal[self.readings-1][0]
         self.dt = self.duration/self.readings
         self.sampleFreq = 1/self.dt
         self.fundamentalFreq = self.sampleFreq/self.readings
-        
+        self.RemoveDCDrift()
         #self.ogSignal =
         self.spectrum = []
         #self.ogSpectrum = 
 
     def RemoveDCDrift(self):
         sum = 0
-        for x in self.GetSignal():
-            sum += self.GetSignal()[x]
-        mean = sum/len(self.GetSignal)
-        for y in self.GetSignal():
-            self.GetSignal()[y] -= mean
-        pass
-
+        for i in self.GetSignal():
+            sum += i
+        mean = sum/self.GetReadings()
+        newSignal = []
+        for i in self.GetSignal():
+            newSignal.append(i - mean)
+        self.SetSignal(newSignal)
+                
     def AddSignal(self):
         with open("signal.txt", "r") as f:
             content = f.readlines()
@@ -34,7 +39,7 @@ class Signal:
                     time = float(parts[0])
                     value = float(parts[1])
                     self.signal.append([time, value])
-        f.close()
+        f.close()      
 
     def GetSignal(self):
         signalValues = []
@@ -54,8 +59,16 @@ class Signal:
     def GetSampleFreq(self):
         return self.sampleFreq
 
+    def SetSignal(self, newSignal):
+        for reading in range(self.readings-1):
+            self.signal[reading][1] = newSignal[reading]
+       
+
     def SetSpectrum(self, spectrum):
         self.spectrum = spectrum
+
+    def GetSpectrum(self):
+        return self.spectrum
 
 
 class SignalProcessor:
@@ -65,8 +78,8 @@ class SignalProcessor:
         self.lowerCutoff = lowerCutoff
 
     def MovingAverage(self, signal, length):
-        pass  
-
+        pass
+        
     def BandPass(self, signal,readings,fs):
         pass
 
@@ -78,10 +91,11 @@ class SignalProcessor:
 
 
 class SignalAnalysis:
-    def __init__(self, filter, signal, output):
+    def __init__(self, filter, signal):
         self.filter = filter
         self.signal = signal
-        self.output = output
+        self.CalculateSpectrum()
+        self.output = SignalResult()
 
     def CleanSignal(self):
         pass
@@ -92,7 +106,11 @@ class SignalAnalysis:
     def CalculateSpectrum(self):
         pass
 
+    def Plot(self):  
+        plt.plot(self.signal.GetSignal(), self.signal.GetTimes())
+
     def GetBPM(self):
+        
         pass
 
 
@@ -100,10 +118,10 @@ class SignalResult:
     def __init__(self):
         pass
 
-    def PlotSpectrum(self):
+    def PlotSpectrum(self, spectrum):
         pass
 
-    def PlotSignal(self):
+    def PlotSignal(self, time, signal):
         pass
 
     def OutputSignalInfo(self):
@@ -113,10 +131,8 @@ class SignalResult:
         pass
 
 
-Filter = SignalProcessor(5, 3.5, 0.5)
+Filter = SignalProcessor(50, 3.5, 0.5)
 signal = Signal()
-Output =  SignalResult(signal)
-Analysis = SignalAnalysis(Filter, signal, Output)
+Analysis = SignalAnalysis(Filter, signal)
 
-
-
+Analysis.Plot()
